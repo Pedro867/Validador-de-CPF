@@ -1,4 +1,9 @@
+
 import java.util.Scanner;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class Validador {
 
@@ -11,26 +16,32 @@ public class Validador {
         cpf = new int[11];
     }
 
-    public void setCPF(String string) {
+    public int setCPF(String string) {
         String regex;
         if (string.contains("-")) {// modelo 000.000.000-00
-            validaTamanhoCPF(string.length() - 3);
-            regex = "[.\\-]";
-            this.cpfStrings = string.split(regex);
-            // System.out.print("CPF inserido: ");
-            // for (String s : this.cpfStrings) {
-            //     System.out.print(s);
-            // }
-            // System.out.println();
+            if (validaTamanhoCPF(string.length() - 3) == 1) {
+                return 1;
+            } else {
+                regex = "[.\\-]";
+                this.cpfStrings = string.split(regex);
+                // System.out.print("CPF inserido: ");
+                // for (String s : this.cpfStrings) {
+                //     System.out.print(s);
+                // }
+                // System.out.println();
+            }
         } else {// modelo 00000000000
-            validaTamanhoCPF(string.length());
-            this.cpfString = string;
-            // System.out.println("CPF inserido: " + this.cpfString);
+            if (validaTamanhoCPF(string.length()) == 1) {
+                return 1;
+            } else {
+                this.cpfString = string;
+                // System.out.println("CPF inserido: " + this.cpfString);
+            }
         }
-        transformaStringEmInt();
+        return transformaStringEmInt();
     }
 
-    public void transformaStringEmInt() {
+    public int transformaStringEmInt() {
         char[] auxChar;
         String auxString = "";
         int contador = 0;
@@ -55,22 +66,26 @@ public class Validador {
         // for (int i : cpf) {
         //     System.out.print(i);
         // }
-        ValidaCPF();
+        return ValidaCPF();
     }
 
-    public void validaTamanhoCPF(int tamanhoDaString) {
+    public int validaTamanhoCPF(int tamanhoDaString) {
         if (tamanhoDaString != 11) {
-            mensagemErro(1);
+            // mensagemErro(1);
+            return 1;
         }
+        return 0;
     }
 
-    public void ValidaCPF() {
+    public int ValidaCPF() {
         int primeirDigito = primeiroDigitoVerificador();
         int segundoDigito = segundoDigitoVerificador();
-        if (primeirDigito != cpf[9] || segundoDigito != cpf[10]){
-            mensagemErro(2);
+        if (primeirDigito != cpf[9] || segundoDigito != cpf[10]) {
+            return 2;
+            // mensagemErro(2);
         }
-        System.out.println("CPF Válido!");
+        // System.out.println("CPF Válido!");
+        return 0;
     }
 
     public int primeiroDigitoVerificador() {
@@ -122,10 +137,84 @@ public class Validador {
         Validador v = new Validador();
         // v.setCPF("111.222.333-44");
         // v.setCPF("17440219619");
-        System.out.println("Bem vindo ao sistema de validação de CPF!\n");
-        System.out.print("Digite seu CPF: ");
-        Scanner scanner = new Scanner(System.in);
-        String CPF = scanner.nextLine();
-        v.setCPF(CPF);
+        // System.out.println("Bem vindo ao sistema de validação de CPF!\n");
+        // System.out.print("Digite seu CPF: ");
+        // Scanner scanner = new Scanner(System.in);
+        // String CPF = scanner.nextLine();
+        // v.setCPF(CPF);
+        Janela janela = new Janela();
+        janela.setValidador(v);
+    }
+}
+
+class Janela extends JFrame {
+
+    JLabel mensagemInicial, mensagemFeedback, labelVazio[];
+    JTextField campoCPF;
+    JButton validar;
+    JPanel mainPanel, textPanel;
+    Validador validador;
+
+    public Janela() {
+        super("Validador de CPF");
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.setLocationRelativeTo(null);
+        this.setVisible(true);
+        this.setSize(300, 120);
+        labelVazio = new JLabel[2];
+        labelVazio[0] = new JLabel();
+        labelVazio[1] = new JLabel();
+        mensagemInicial = new JLabel("Insira seu CPF");
+        mensagemFeedback = new JLabel("");
+        campoCPF = new JTextField(10);
+        validar = new JButton("Validar CPF");
+
+        mainPanel = (JPanel) this.getContentPane();
+        mainPanel.setLayout(new BorderLayout());
+
+        // textPanel = new JPanel(new GridLayout(6,1, 0, 50));
+        textPanel = new JPanel(new FlowLayout());
+        textPanel.add(mensagemInicial);
+        textPanel.add(campoCPF);
+        //textPanel.add(labelVazio[0]);
+        textPanel.add(validar);
+        textPanel.add(mensagemFeedback);
+        //textPanel.add(labelVazio[1]);
+
+        mainPanel.add(textPanel, BorderLayout.CENTER);
+
+        ButtonHandler handler = new ButtonHandler();
+        validar.addActionListener(handler);
+
+        recarregaMainPanel();
+    }
+
+    public void recarregaMainPanel() {
+        mainPanel.revalidate();
+        mainPanel.repaint();
+    }
+
+    public void setValidador(Validador v) {
+        this.validador = v;
+    }
+
+    private class ButtonHandler implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent event) {
+            if (event.getSource() == validar) {
+                int result = validador.setCPF(campoCPF.getText());
+                if (result == 0) {
+                    mensagemFeedback.setText("CPF válido!");
+                }
+                if (result == 1) {
+                    mensagemFeedback.setText("Formato inválido!");
+                }
+                if (result == 2) {
+                    mensagemFeedback.setText("CPF inválido!");
+                }
+                recarregaMainPanel();
+            }
+        }
     }
 }
